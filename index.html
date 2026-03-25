@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>WoT Maneuver</title>
+    <title>WoT Maneuver Prediction Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -10,6 +10,8 @@
             --bg-dark: #0a0a0a;
             --card-bg: #151515;
             --prog-color: #4caf50;
+            --max-color: rgba(76, 175, 80, 0.15);
+            --min-color: rgba(244, 67, 54, 0.15);
         }
 
         body { 
@@ -53,8 +55,8 @@
 
         .chart-container {
             width: 100%;
-            height: 40vh; 
-            max-height: 500px;
+            height: 45vh; 
+            max-height: 550px;
             margin-bottom: 3vh;
             background: rgba(0,0,0,0.2);
             padding: 10px;
@@ -81,13 +83,10 @@
         .btn { cursor: pointer; border: 1px solid #444; padding: 10px 20px; font-size: 0.75vw; text-transform: uppercase; font-weight: bold; border-radius: 2px; transition: 0.2s; }
         .btn-save { background: var(--accent); color: #000; border-color: var(--accent); }
         .btn-save:hover { background: #e68200; }
+        .btn-export { background: #2196F3; color: white; border-color: #2196F3; }
+        .btn-export:hover { background: #1976D2; }
         .btn-delete { background: transparent; color: #ff4444; border-color: #440000; }
         .btn-delete:hover { background: #440000; border-color: #ff4444; }
-
-        @media (max-width: 768px) {
-            h2 { font-size: 1.2em; }
-            .status-panel { flex-direction: column; gap: 10px; }
-        }
     </style>
 </head>
 <body>
@@ -98,7 +97,7 @@
             <img src="https://eu.wargaming.net/clans/media/clans/emblems/cl_154/500057154/emblem_195x195.png" class="clan-logo">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYRYo-hcufmDDMRvS_S2TqLkyd89FOM6HN0A&s" class="main-logo-element">
         </div>
-        <h2>WoT Maneuver Prediction</h2>
+        <h2>Maneuver Prediction + Range</h2>
         <img src="https://eu.wargaming.net/clans/media/clans/emblems/cl_706/500135706/emblem_195x195.png" class="clan-logo">
     </div>
 
@@ -116,9 +115,11 @@
     <div class="status-panel">
         <div>EFFICIENCY: <span id="eff-val" class="stat-val">0%</span></div>
         <div>TREND: <span id="trend-val" class="stat-val">Neutral</span></div>
-        <div>Target-Prediction: <span id="total-val" class="stat-val">-</span></div>
+        <div>PROGNOSIS: <span id="total-val" class="stat-val">-</span></div>
+        <div>RANGE: <span id="range-val" class="stat-val">-</span></div>
         <div style="flex-grow: 1;"></div>
         <div class="controls">
+            <button class="btn btn-export" onclick="exportURL()">Export URL</button>
             <button class="btn btn-save" onclick="saveData()">save</button>
             <button class="btn btn-delete" onclick="clearData()">delete</button>
         </div>
@@ -126,7 +127,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'wot_maneuver_v46_2';
+    const STORAGE_KEY = 'wot_maneuver_v46_3';
     const refData = [
         [971, 2025, 3138, 4292, 5431, 6561, 7781, 8953, 10159, 11374, 12552, 13827, 15098, 16611],
         [903, 1867, 2888, 3956, 5008, 5938, 6964, 8048, 9149, 10253, 11375, 12556, 13756, 15077],
@@ -145,28 +146,26 @@
     function initChart() {
         const ctx = document.getElementById('progChart').getContext('2d');
         Chart.defaults.color = '#666'; 
-        Chart.defaults.font.family = "'Segoe UI', sans-serif";
 
         chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: Array.from({length: 14}, (_, i) => (i+1)),
                 datasets: [
-                    { label: 'Reference curve', data: avgTotal, borderColor: '#444', borderDash: [5,5], fill: false, tension: 0.1, pointRadius: 0 },
-                    { label: 'Actual value', data: [], borderColor: '#ff9100', backgroundColor: '#ff9100', fill: false, tension: 0.3, pointRadius: 4 },
-                    { label: 'Prediction', data: [], borderColor: '#4caf50', borderDash: [3,3], fill: false, tension: 0.3, pointRadius: 2 }
+                    { label: 'Ref-Average', data: avgTotal, borderColor: '#444', borderDash: [5,5], fill: false, pointRadius: 0 },
+                    { label: 'Actual', data: [], borderColor: '#ff9100', backgroundColor: '#ff9100', fill: false, tension: 0.3, pointRadius: 4, z: 10 },
+                    { label: 'Max-Case', data: [], borderColor: 'rgba(76, 175, 80, 0.4)', borderDash: [2,2], fill: false, pointRadius: 0 },
+                    { label: 'Min-Case', data: [], borderColor: 'rgba(244, 67, 54, 0.4)', borderDash: [2,2], fill: '-1', backgroundColor: 'rgba(255, 255, 255, 0.05)', pointRadius: 0 },
+                    { label: 'Prognosis', data: [], borderColor: '#4caf50', borderDash: [3,3], fill: false, tension: 0.3, pointRadius: 2 }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { 
-                    legend: { position: 'top', labels: { boxWidth: 10, padding: 10 } },
-                    tooltip: { mode: 'index', intersect: false }
-                },
+                plugins: { legend: { position: 'top' } },
                 scales: {
-                    y: { grid: { color: '#222' }, title: { display: true, text: 'Running total' } },
-                    x: { grid: { color: '#222' }, title: { display: true, text: 'Kampftag' } }
+                    y: { grid: { color: '#222' } },
+                    x: { grid: { color: '#222' } }
                 }
             }
         });
@@ -176,10 +175,9 @@
         let headHtml = '<tr><th class="row-label">TAG</th>';
         for(let i=1; i<=14; i++) headHtml += `<th>${i.toString().padStart(2, '0')}</th>`;
         document.getElementById('tableHead').innerHTML = headHtml + '</tr>';
-
         document.getElementById('tableBody').innerHTML = `
-            <tr><td class="row-label">Input data</td>${avgTotal.map(v => `<td>${Math.round(v)}</td>`).join('')}</tr>
-            <tr class="real-row"><td class="row-label">Actual value</td>${avgTotal.map((_, i) => `<td><input type="number" id="in-${i}" oninput="analyze()" placeholder="---"></td>`).join('')}</tr>
+            <tr><td class="row-label">Reference</td>${avgTotal.map(v => `<td>${Math.round(v)}</td>`).join('')}</tr>
+            <tr class="real-row"><td class="row-label">Actual Value</td>${avgTotal.map((_, i) => `<td><input type="number" id="in-${i}" oninput="analyze()" placeholder="---"></td>`).join('')}</tr>
             <tr class="prog-row"><td class="row-label">Prediction</td>${avgTotal.map((_, i) => `<td id="out-${i}">-</td>`).join('')}</tr>
         `;
     }
@@ -188,16 +186,31 @@
     initTable();
 
     window.onload = function() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            const data = JSON.parse(saved);
-            data.forEach((val, idx) => { if (val !== null) {
-                let el = document.getElementById(`in-${idx}`);
-                if(el) el.value = val;
-            }});
-            analyze();
+        const params = new URLSearchParams(window.location.search);
+        let hasParams = false;
+        for(let i=0; i<14; i++) {
+            if(params.has(`d${i}`)) {
+                document.getElementById(`in-${i}`).value = params.get(`d${i}`);
+                hasParams = true;
+            }
         }
+        if (!hasParams) {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                JSON.parse(saved).forEach((val, idx) => { if (val !== null) document.getElementById(`in-${idx}`).value = val; });
+            }
+        }
+        analyze();
     };
+
+    function exportURL() {
+        const url = new URL(window.location.href.split('?')[0]);
+        for(let i=0; i<14; i++) {
+            let v = document.getElementById(`in-${i}`).value;
+            if(v !== "") url.searchParams.set(`d${i}`, v);
+        }
+        navigator.clipboard.writeText(url.toString()).then(() => alert("URL kopiert!"));
+    }
 
     function saveData() {
         let data = Array.from({length: 14}, (_, i) => {
@@ -205,31 +218,35 @@
             return v === "" ? null : parseFloat(v);
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        alert("Daten gespeichert.");
+        alert("Gespeichert.");
     }
 
     function clearData() {
-        if(confirm("Alle Daten delete?")) {
-            localStorage.removeItem(STORAGE_KEY);
-            location.reload();
-        }
+        if(confirm("Löschen?")) { localStorage.removeItem(STORAGE_KEY); window.location.search = ""; location.reload(); }
     }
 
     function analyze() {
         let inputs = [];
-        let realDataForChart = new Array(14).fill(null);
-        let progDataForChart = new Array(14).fill(null);
+        let realData = new Array(14).fill(null);
+        let progData = new Array(14).fill(null);
+        let maxData = new Array(14).fill(null);
+        let minData = new Array(14).fill(null);
 
         for(let i=0; i<14; i++) {
             let v = parseFloat(document.getElementById(`in-${i}`).value);
             if(!isNaN(v)) {
                 inputs.push({t: i, total: v});
-                realDataForChart[i] = v;
-                progDataForChart[i] = v; 
+                realData[i] = v;
+                progData[i] = v;
+                maxData[i] = v;
+                minData[i] = v;
             }
         }
 
         if(inputs.length === 0) return;
+
+        let lastT = inputs[inputs.length - 1].t;
+        let currentTotal = inputs[inputs.length - 1].total;
 
         let inputDeltas = inputs.map((inp, i) => {
             let d = (i === 0) ? inp.total : inp.total - inputs[i-1].total;
@@ -242,28 +259,25 @@
         document.getElementById('eff-val').innerText = (avgRatio * 100).toFixed(1) + "%";
         document.getElementById('trend-val').innerText = trend > 0.02 ? "Steigend" : trend < -0.02 ? "Sinkend" : "Stabil";
 
-        let lastT = inputs[inputs.length - 1].t;
-        let currentTotal = inputs[inputs.length - 1].total;
-
-        for(let i=0; i<14; i++) {
-            let outCell = document.getElementById(`out-${i}`);
-            if(i <= lastT) {
-                outCell.innerText = realDataForChart[i] || "-";
-            } else {
-                let proj = currentTotal;
-                for(let j = lastT + 1; j <= i; j++) {
-                    let futureRatio = Math.max(0.5, Math.min(2.0, inputDeltas[inputDeltas.length-1].ratio + (trend * (j - lastT))));
-                    proj += (avgDelta[j] * futureRatio);
-                }
-                outCell.innerText = Math.round(proj);
-                progDataForChart[i] = Math.round(proj);
-                if(i === 13) document.getElementById('total-val').innerText = Math.round(proj).toLocaleString('de-DE') + " Pkt";
-            }
+        for(let i=lastT + 1; i < 14; i++) {
+            let proj = progData[i-1], pMax = maxData[i-1], pMin = minData[i-1];
+            let ratio = Math.max(0.5, Math.min(2.0, inputDeltas[inputDeltas.length-1].ratio + (trend * (i - lastT))));
+            
+            progData[i] = Math.round(proj + (avgDelta[i] * ratio));
+            maxData[i] = Math.round(pMax + (avgDelta[i] * (ratio * 1.15)));
+            minData[i] = Math.round(pMin + (avgDelta[i] * (ratio * 0.85)));
+            
+            document.getElementById(`out-${i}`).innerText = progData[i];
         }
 
-        chart.data.datasets[1].data = realDataForChart;
-        chart.data.datasets[2].data = progDataForChart;
-        chart.update();
+        document.getElementById('total-val').innerText = progData[13].toLocaleString('de-DE') + " Pkt";
+        document.getElementById('range-val').innerText = minData[13].toLocaleString('de-DE') + " - " + maxData[13].toLocaleString('de-DE');
+
+        chart.data.datasets[1].data = realData;
+        chart.data.datasets[2].data = maxData;
+        chart.data.datasets[3].data = minData;
+        chart.data.datasets[4].data = progData;
+        chart.update('none');
     }
 </script>
 </body>
