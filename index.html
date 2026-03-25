@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>WoT Maneuver</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --accent: #ff9100;
+            --bg-dark: #0a0a0a;
+            --card-bg: #151515;
+            --prog-color: #4caf50;
+        }
+
+        body { 
+            background-color: var(--bg-dark);
+            color: #d0d0d0; 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 1vw; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 2vw; 
+            border-radius: 3px; 
+            border: 1px solid #333; 
+            border-top: 4px solid var(--accent); 
+            width: 95vw; 
+            max-width: 1600px; 
+            box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+            box-sizing: border-box; 
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2vh; 
+            padding-bottom: 15px;
+            border-bottom: 1px solid #222;
+        }
+
+        .logo-group { display: flex; align-items: center; gap: 1vw; }
+        .clan-logo { width: 4vw; height: 4vw; max-width: 60px; max-height: 60px; object-fit: contain; }
+        .main-logo-element { width: 4vw; height: 4vw; max-width: 60px; max-height: 60px; object-fit: cover; border-radius: 3px; border: 1px solid #444; }
+        
+        h2 { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.8vw; }
+
+        .chart-container {
+            width: 100%;
+            height: 40vh; 
+            max-height: 500px;
+            margin-bottom: 3vh;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .table-wrapper { overflow-x: auto; margin-bottom: 2vh; }
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; min-width: 1000px; }
+        th { background: #1c1c1c; color: #666; font-size: 0.75vw; padding: 10px; text-transform: uppercase; border: 1px solid #222; }
+        td { padding: 8px; border: 1px solid #1a1a1a; text-align: center; font-family: 'Consolas', monospace; font-size: 0.85vw; }
+        .row-label { background: #0e0e0e; color: var(--accent); font-weight: bold; text-align: left; width: 12vw; max-width: 180px; padding-left: 10px; }
+        
+        input { background: #000; border: 1px solid #444; color: var(--accent); padding: 5px; width: 85%; text-align: right; font-weight: bold; outline: none; }
+        input:focus { border-color: var(--accent); }
+
+        .prog-row { color: var(--prog-color); font-weight: bold; background: rgba(76, 175, 80, 0.05); }
+        .real-row { background: rgba(255, 145, 0, 0.05); }
+
+        .status-panel { background: #0e0e0e; padding: 1.5vh; border: 1px solid #222; font-size: 0.9vw; display: flex; gap: 2vw; align-items: center; box-sizing: border-box;}
+        .stat-val { color: var(--accent); font-weight: bold; }
+        
+        .controls { margin-top: 1.5vh; display: flex; gap: 10px; justify-content: flex-end;}
+        .btn { cursor: pointer; border: 1px solid #444; padding: 10px 20px; font-size: 0.75vw; text-transform: uppercase; font-weight: bold; border-radius: 2px; transition: 0.2s; }
+        .btn-save { background: var(--accent); color: #000; border-color: var(--accent); }
+        .btn-save:hover { background: #e68200; }
+        .btn-delete { background: transparent; color: #ff4444; border-color: #440000; }
+        .btn-delete:hover { background: #440000; border-color: #ff4444; }
+
+        @media (max-width: 768px) {
+            h2 { font-size: 1.2em; }
+            .status-panel { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-container">
+        <div class="logo-group">
+            <img src="https://eu.wargaming.net/clans/media/clans/emblems/cl_154/500057154/emblem_195x195.png" class="clan-logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYRYo-hcufmDDMRvS_S2TqLkyd89FOM6HN0A&s" class="main-logo-element">
+        </div>
+        <h2>WoT Maneuver Prediction</h2>
+        <img src="https://eu.wargaming.net/clans/media/clans/emblems/cl_706/500135706/emblem_195x195.png" class="clan-logo">
+    </div>
+
+    <div class="chart-container">
+        <canvas id="progChart"></canvas>
+    </div>
+    
+    <div class="table-wrapper">
+        <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="status-panel">
+        <div>EFFICIENCY: <span id="eff-val" class="stat-val">0%</span></div>
+        <div>TREND: <span id="trend-val" class="stat-val">Neutral</span></div>
+        <div>Target-Prediction: <span id="total-val" class="stat-val">-</span></div>
+        <div style="flex-grow: 1;"></div>
+        <div class="controls">
+            <button class="btn btn-save" onclick="saveData()">save</button>
+            <button class="btn btn-delete" onclick="clearData()">delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'wot_maneuver_v46_2';
+    const refData = [
+        [971, 2025, 3138, 4292, 5431, 6561, 7781, 8953, 10159, 11374, 12552, 13827, 15098, 16611],
+        [903, 1867, 2888, 3956, 5008, 5938, 6964, 8048, 9149, 10253, 11375, 12556, 13756, 15077],
+        [884, 1761, 2707, 3651, 4646, 5531, 6565, 7645, 8688, 9797, 10874, 11983, 13098, 14338],
+        [977, 2077, 3238, 4405, 5623, 6841, 8112, 9386, 10665, 11928, 13234, 14587, 16003, 17700]
+    ];
+
+    let avgTotal = [], avgDelta = [];
+    for(let i=0; i<14; i++) {
+        let sum = (refData[0][i] + refData[1][i] + refData[2][i] + refData[3][i]) / 4;
+        avgTotal.push(sum);
+        avgDelta.push(i === 0 ? sum : sum - avgTotal[i-1]);
+    }
+
+    let chart;
+    function initChart() {
+        const ctx = document.getElementById('progChart').getContext('2d');
+        Chart.defaults.color = '#666'; 
+        Chart.defaults.font.family = "'Segoe UI', sans-serif";
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 14}, (_, i) => (i+1)),
+                datasets: [
+                    { label: 'Reference curve', data: avgTotal, borderColor: '#444', borderDash: [5,5], fill: false, tension: 0.1, pointRadius: 0 },
+                    { label: 'Actual value', data: [], borderColor: '#ff9100', backgroundColor: '#ff9100', fill: false, tension: 0.3, pointRadius: 4 },
+                    { label: 'Prediction', data: [], borderColor: '#4caf50', borderDash: [3,3], fill: false, tension: 0.3, pointRadius: 2 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { position: 'top', labels: { boxWidth: 10, padding: 10 } },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: { grid: { color: '#222' }, title: { display: true, text: 'Running total' } },
+                    x: { grid: { color: '#222' }, title: { display: true, text: 'Kampftag' } }
+                }
+            }
+        });
+    }
+
+    function initTable() {
+        let headHtml = '<tr><th class="row-label">TAG</th>';
+        for(let i=1; i<=14; i++) headHtml += `<th>${i.toString().padStart(2, '0')}</th>`;
+        document.getElementById('tableHead').innerHTML = headHtml + '</tr>';
+
+        document.getElementById('tableBody').innerHTML = `
+            <tr><td class="row-label">Input data</td>${avgTotal.map(v => `<td>${Math.round(v)}</td>`).join('')}</tr>
+            <tr class="real-row"><td class="row-label">Actual value</td>${avgTotal.map((_, i) => `<td><input type="number" id="in-${i}" oninput="analyze()" placeholder="---"></td>`).join('')}</tr>
+            <tr class="prog-row"><td class="row-label">Prediction</td>${avgTotal.map((_, i) => `<td id="out-${i}">-</td>`).join('')}</tr>
+        `;
+    }
+
+    initChart();
+    initTable();
+
+    window.onload = function() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const data = JSON.parse(saved);
+            data.forEach((val, idx) => { if (val !== null) {
+                let el = document.getElementById(`in-${idx}`);
+                if(el) el.value = val;
+            }});
+            analyze();
+        }
+    };
+
+    function saveData() {
+        let data = Array.from({length: 14}, (_, i) => {
+            let v = document.getElementById(`in-${i}`).value;
+            return v === "" ? null : parseFloat(v);
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        alert("Daten gespeichert.");
+    }
+
+    function clearData() {
+        if(confirm("Alle Daten delete?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    }
+
+    function analyze() {
+        let inputs = [];
+        let realDataForChart = new Array(14).fill(null);
+        let progDataForChart = new Array(14).fill(null);
+
+        for(let i=0; i<14; i++) {
+            let v = parseFloat(document.getElementById(`in-${i}`).value);
+            if(!isNaN(v)) {
+                inputs.push({t: i, total: v});
+                realDataForChart[i] = v;
+                progDataForChart[i] = v; 
+            }
+        }
+
+        if(inputs.length === 0) return;
+
+        let inputDeltas = inputs.map((inp, i) => {
+            let d = (i === 0) ? inp.total : inp.total - inputs[i-1].total;
+            return {t: inp.t, val: d, ratio: d / avgDelta[inp.t]};
+        });
+
+        let avgRatio = inputDeltas.reduce((a, b) => a + b.ratio, 0) / inputDeltas.length;
+        let trend = inputDeltas.length >= 2 ? ((inputDeltas[inputDeltas.length-1].ratio - inputDeltas[0].ratio) / (inputDeltas[inputDeltas.length-1].t - inputDeltas[0].t)) * 0.5 : 0;
+
+        document.getElementById('eff-val').innerText = (avgRatio * 100).toFixed(1) + "%";
+        document.getElementById('trend-val').innerText = trend > 0.02 ? "Steigend" : trend < -0.02 ? "Sinkend" : "Stabil";
+
+        let lastT = inputs[inputs.length - 1].t;
+        let currentTotal = inputs[inputs.length - 1].total;
+
+        for(let i=0; i<14; i++) {
+            let outCell = document.getElementById(`out-${i}`);
+            if(i <= lastT) {
+                outCell.innerText = realDataForChart[i] || "-";
+            } else {
+                let proj = currentTotal;
+                for(let j = lastT + 1; j <= i; j++) {
+                    let futureRatio = Math.max(0.5, Math.min(2.0, inputDeltas[inputDeltas.length-1].ratio + (trend * (j - lastT))));
+                    proj += (avgDelta[j] * futureRatio);
+                }
+                outCell.innerText = Math.round(proj);
+                progDataForChart[i] = Math.round(proj);
+                if(i === 13) document.getElementById('total-val').innerText = Math.round(proj).toLocaleString('de-DE') + " Pkt";
+            }
+        }
+
+        chart.data.datasets[1].data = realDataForChart;
+        chart.data.datasets[2].data = progDataForChart;
+        chart.update();
+    }
+</script>
+</body>
+</html>
