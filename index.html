@@ -81,6 +81,9 @@
             </div>
             
             <div class="flex items-center gap-2 flex-wrap">
+                <button id="btn-share-url" onclick="copyShareableURL()" class="px-3 py-2 bg-wot-gold hover:bg-wot-goldlight text-wot-dark text-xs font-bold rounded shadow transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-link"></i> Copy Share Link
+                </button>
                 <button id="btn-export-html" onclick="exportHTML()" class="px-3 py-2 bg-wot-input hover:bg-wot-border text-wot-gold text-xs font-semibold rounded border border-wot-gold/30 hover:border-wot-gold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-file-export"></i> Export HTML & Data
                 </button>
@@ -142,14 +145,29 @@
 
         <!-- Input Grid -->
         <div class="bg-wot-card border border-wot-border rounded-lg p-6 shadow-xl">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-wot-border">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 pb-3 border-b border-wot-border">
                 <div>
                     <h2 class="text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-keyboard text-wot-gold"></i> Current Maneuver Daily Scores (Points)
                     </h2>
                     <p class="text-xs text-gray-400">Enter cumulative points for completed days. The forecast will update automatically.</p>
                 </div>
-                <span class="text-xs px-2.5 py-1 bg-wot-input text-wot-gold border border-wot-gold/30 rounded font-mono">Autosave: Active</span>
+                
+                <!-- Base URL Settings & Share Link input -->
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <div class="relative flex-grow md:w-80">
+                        <input 
+                            type="text" 
+                            id="custom-base-url" 
+                            placeholder="Base URL (e.g., https://site.com/maneuver)" 
+                            class="w-full bg-wot-input border border-wot-border focus:border-wot-gold text-gray-300 text-xs rounded px-3 py-1.5 outline-none font-mono"
+                            onchange="saveBaseUrl()"
+                        />
+                    </div>
+                    <button onclick="copyShareableURL()" class="px-3 py-1.5 bg-wot-border hover:bg-wot-gold hover:text-wot-dark text-wot-gold text-xs font-semibold rounded transition-all whitespace-nowrap flex items-center gap-1.5">
+                        <i class="fa-solid fa-share-nodes"></i> Copy URL
+                    </button>
+                </div>
             </div>
             
             <div id="inputs-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-14 gap-2">
@@ -250,10 +268,98 @@
 
         // On Load Initializer
         window.onload = function() {
-            loadSavedData();
+            initBaseUrl();
+            const loadedFromUrl = loadUrlParams();
+            if (!loadedFromUrl) {
+                loadSavedData();
+            }
             createInputFields();
             updateDashboard();
         };
+
+        // Custom Base URL initialization & storage
+        function initBaseUrl() {
+            const input = document.getElementById('custom-base-url');
+            const savedUrl = localStorage.getItem("wot_maneuver_base_url");
+            if (savedUrl) {
+                input.value = savedUrl;
+            } else {
+                // Default to current location origin + path without query params
+                input.value = window.location.origin + window.location.pathname;
+            }
+        }
+
+        function saveBaseUrl() {
+            const input = document.getElementById('custom-base-url');
+            localStorage.setItem("wot_maneuver_base_url", input.value.trim());
+        }
+
+        // Parse URL Parameters (e.g. ?d=903,1867,2888,... or ?d1=903&d2=1867...)
+        function loadUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Format 1: Compact comma-separated list ?d=903,1867,2888,...
+            if (params.has('d')) {
+                const parts = params.get('d').split(',');
+                for (let i = 0; i < 14; i++) {
+                    if (parts[i] !== undefined && parts[i] !== '' && !isNaN(parts[i])) {
+                        currentData[i] = parseFloat(parts[i]);
+                    }
+                }
+                saveData();
+                showToast("Data automatically loaded from URL!");
+                return true;
+            }
+
+            // Format 2: Individual day parameters ?d1=903&d2=1867...
+            let foundAny = false;
+            for (let i = 0; i < 14; i++) {
+                const key = `d${i + 1}`;
+                if (params.has(key)) {
+                    const val = parseFloat(params.get(key));
+                    if (!isNaN(val)) {
+                        currentData[i] = val;
+                        foundAny = true;
+                    }
+                }
+            }
+            if (foundAny) {
+                saveData();
+                showToast("Data loaded from URL parameters!");
+                return true;
+            }
+
+            return false;
+        }
+
+        // Generate and Copy Shareable URL
+        function generateShareableURL() {
+            const input = document.getElementById('custom-base-url');
+            let baseUrl = input.value.trim() || (window.location.origin + window.location.pathname);
+            
+            // Format array into comma-separated values (empty strings for nulls)
+            const serialized = currentData.map(v => (v !== null && !isNaN(v)) ? v : '').join(',');
+            
+            // Trim trailing commas if ending days are empty
+            const trimmedSerialized = serialized.replace(/,+$/, '');
+
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            return `${baseUrl}${separator}d=${encodeURIComponent(trimmedSerialized)}`;
+        }
+
+        function copyShareableURL() {
+            const shareUrl = generateShareableURL();
+            
+            // Copy to clipboard using standard input fallback
+            const tempInput = document.createElement("input");
+            tempInput.value = shareUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            showToast("Shareable URL copied to clipboard!");
+        }
 
         // Load LocalStorage if available
         function loadSavedData() {
