@@ -1,284 +1,765 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>WoT Maneuver Prediction Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WoT Maneuver - Forecast & Prediction Tool</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --accent: #ff9100;
-            --bg-dark: #0a0a0a;
-            --card-bg: #151515;
-            --prog-color: #4caf50;
-            --max-color: rgba(76, 175, 80, 0.15);
-            --min-color: rgba(244, 67, 54, 0.15);
-        }
-
-        body { 
-            background-color: var(--bg-dark);
-            color: #d0d0d0; 
-            font-family: 'Segoe UI', sans-serif; 
-            margin: 0; 
-            padding: 1vw; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .card { 
-            background: var(--card-bg); 
-            padding: 2vw; 
-            border-radius: 3px; 
-            border: 1px solid #333; 
-            border-top: 4px solid var(--accent); 
-            width: 95vw; 
-            max-width: 1600px; 
-            box-shadow: 0 10px 50px rgba(0,0,0,0.8);
-            box-sizing: border-box; 
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2vh; 
-            padding-bottom: 15px;
-            border-bottom: 1px solid #222;
-        }
-
-        .logo-group { display: flex; align-items: center; gap: 1vw; }
-        .clan-logo { width: 4vw; height: 4vw; max-width: 60px; max-height: 60px; object-fit: contain; }
-        .main-logo-element { width: 4vw; height: 4vw; max-width: 60px; max-height: 60px; object-fit: cover; border-radius: 3px; border: 1px solid #444; }
-        
-        h2 { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.8vw; }
-
-        .chart-container {
-            width: 100%;
-            height: 45vh; 
-            max-height: 550px;
-            margin-bottom: 3vh;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .table-wrapper { overflow-x: auto; margin-bottom: 2vh; }
-        table { border-collapse: collapse; width: 100%; table-layout: fixed; min-width: 1000px; }
-        th { background: #1c1c1c; color: #666; font-size: 0.75vw; padding: 10px; text-transform: uppercase; border: 1px solid #222; }
-        td { padding: 8px; border: 1px solid #1a1a1a; text-align: center; font-family: 'Consolas', monospace; font-size: 0.85vw; }
-        .row-label { background: #0e0e0e; color: var(--accent); font-weight: bold; text-align: left; width: 12vw; max-width: 180px; padding-left: 10px; }
-        
-        input { background: #000; border: 1px solid #444; color: var(--accent); padding: 5px; width: 85%; text-align: right; font-weight: bold; outline: none; }
-        input:focus { border-color: var(--accent); }
-
-        .prog-row { color: var(--prog-color); font-weight: bold; background: rgba(76, 175, 80, 0.05); }
-        .real-row { background: rgba(255, 145, 0, 0.05); }
-
-        .status-panel { background: #0e0e0e; padding: 1.5vh; border: 1px solid #222; font-size: 0.9vw; display: flex; gap: 2vw; align-items: center; box-sizing: border-box;}
-        .stat-val { color: var(--accent); font-weight: bold; }
-        
-        .controls { margin-top: 1.5vh; display: flex; gap: 10px; justify-content: flex-end;}
-        .btn { cursor: pointer; border: 1px solid #444; padding: 10px 20px; font-size: 0.75vw; text-transform: uppercase; font-weight: bold; border-radius: 2px; transition: 0.2s; }
-        .btn-save { background: var(--accent); color: #000; border-color: var(--accent); }
-        .btn-save:hover { background: #e68200; }
-        .btn-export { background: #2196F3; color: white; border-color: #2196F3; }
-        .btn-export:hover { background: #1976D2; }
-        .btn-delete { background: transparent; color: #ff4444; border-color: #440000; }
-        .btn-delete:hover { background: #440000; border-color: #ff4444; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="header-container">
-        <div class="logo-group">
-            <img src="https://eu.wargaming.net/clans/media/clans/emblems/cl_154/500057154/emblem_195x195.png" class="clan-logo">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYRYo-hcufmDDMRvS_S2TqLkyd89FOM6HN0A&s" class="main-logo-element">
-        </div>
-        <h2>Maneuver Prediction + Range</h2>
-        <img src="https://eu.wargaming.net/clans/media/clans/emblems/cl_706/500135706/emblem_195x195.png" class="clan-logo">
-    </div>
-
-    <div class="chart-container">
-        <canvas id="progChart"></canvas>
-    </div>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <div class="table-wrapper">
-        <table>
-            <thead id="tableHead"></thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
-
-    <div class="status-panel">
-        <div>EFFICIENCY: <span id="eff-val" class="stat-val">0%</span></div>
-        <div>TREND: <span id="trend-val" class="stat-val">Neutral</span></div>
-        <div>PROGNOSIS: <span id="total-val" class="stat-val">-</span></div>
-        <div>RANGE: <span id="range-val" class="stat-val">-</span></div>
-        <div style="flex-grow: 1;"></div>
-        <div class="controls">
-            <button class="btn btn-export" onclick="exportURL()">Export URL</button>
-            <button class="btn btn-save" onclick="saveData()">save</button>
-            <button class="btn btn-delete" onclick="clearData()">delete</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const STORAGE_KEY = 'wot_maneuver_v46_3';
-    const refData = [
-        [971, 2025, 3138, 4292, 5431, 6561, 7781, 8953, 10159, 11374, 12552, 13827, 15098, 16611],
-        [903, 1867, 2888, 3956, 5008, 5938, 6964, 8048, 9149, 10253, 11375, 12556, 13756, 15077],
-        [884, 1761, 2707, 3651, 4646, 5531, 6565, 7645, 8688, 9797, 10874, 11983, 13098, 14338],
-        [977, 2077, 3238, 4405, 5623, 6841, 8112, 9386, 10665, 11928, 13234, 14587, 16003, 17700]
-    ];
-
-    let avgTotal = [], avgDelta = [];
-    for(let i=0; i<14; i++) {
-        let sum = (refData[0][i] + refData[1][i] + refData[2][i] + refData[3][i]) / 4;
-        avgTotal.push(sum);
-        avgDelta.push(i === 0 ? sum : sum - avgTotal[i-1]);
-    }
-
-    let chart;
-    function initChart() {
-        const ctx = document.getElementById('progChart').getContext('2d');
-        Chart.defaults.color = '#666'; 
-
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array.from({length: 14}, (_, i) => (i+1)),
-                datasets: [
-                    { label: 'Ref-Average', data: avgTotal, borderColor: '#444', borderDash: [5,5], fill: false, pointRadius: 0 },
-                    { label: 'Actual', data: [], borderColor: '#ff9100', backgroundColor: '#ff9100', fill: false, tension: 0.3, pointRadius: 4, z: 10 },
-                    { label: 'Max-Case', data: [], borderColor: 'rgba(76, 175, 80, 0.4)', borderDash: [2,2], fill: false, pointRadius: 0 },
-                    { label: 'Min-Case', data: [], borderColor: 'rgba(244, 67, 54, 0.4)', borderDash: [2,2], fill: '-1', backgroundColor: 'rgba(255, 255, 255, 0.05)', pointRadius: 0 },
-                    { label: 'Prognosis', data: [], borderColor: '#4caf50', borderDash: [3,3], fill: false, tension: 0.3, pointRadius: 2 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } },
-                scales: {
-                    y: { grid: { color: '#222' } },
-                    x: { grid: { color: '#222' } }
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        wot: {
+                            gold: '#f39c12',
+                            goldlight: '#f1c40f',
+                            accent: '#e67e22',
+                            dark: '#121317',
+                            card: '#1b1d24',
+                            border: '#2a2d37',
+                            input: '#242731',
+                            cyan: '#00d2d3'
+                        }
+                    }
                 }
             }
-        });
-    }
-
-    function initTable() {
-        let headHtml = '<tr><th class="row-label">TAG</th>';
-        for(let i=1; i<=14; i++) headHtml += `<th>${i.toString().padStart(2, '0')}</th>`;
-        document.getElementById('tableHead').innerHTML = headHtml + '</tr>';
-        document.getElementById('tableBody').innerHTML = `
-            <tr><td class="row-label">Reference</td>${avgTotal.map(v => `<td>${Math.round(v)}</td>`).join('')}</tr>
-            <tr class="real-row"><td class="row-label">Actual Value</td>${avgTotal.map((_, i) => `<td><input type="number" id="in-${i}" oninput="analyze()" placeholder="---"></td>`).join('')}</tr>
-            <tr class="prog-row"><td class="row-label">Prediction</td>${avgTotal.map((_, i) => `<td id="out-${i}">-</td>`).join('')}</tr>
-        `;
-    }
-
-    initChart();
-    initTable();
-
-    window.onload = function() {
-        const params = new URLSearchParams(window.location.search);
-        let hasParams = false;
-        for(let i=0; i<14; i++) {
-            if(params.has(`d${i}`)) {
-                document.getElementById(`in-${i}`).value = params.get(`d${i}`);
-                hasParams = true;
-            }
         }
-        if (!hasParams) {
-            const saved = localStorage.getItem(STORAGE_KEY);
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0e11;
+            color: #e1e3e8;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121317;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2d37;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f39c12;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="bg-wot-card border-b border-wot-border sticky top-0 z-50 shadow-2xl backdrop-blur bg-opacity-90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded bg-gradient-to-br from-wot-gold to-wot-accent flex items-center justify-center text-wot-dark font-bold text-2xl shadow-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white tracking-wide flex items-center gap-2">
+                        WoT Maneuver <span class="text-wot-gold">Forecast Tool</span>
+                    </h1>
+                    <p class="text-xs text-gray-400">Analytical Prediction & Trend Monitoring for Clan Events</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 flex-wrap">
+                <button id="btn-export-html" onclick="exportHTML()" class="px-3 py-2 bg-wot-input hover:bg-wot-border text-wot-gold text-xs font-semibold rounded border border-wot-gold/30 hover:border-wot-gold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-file-export"></i> Export HTML & Data
+                </button>
+                <button id="btn-export-json" onclick="exportJSON()" class="px-3 py-2 bg-wot-input hover:bg-wot-border text-gray-300 text-xs font-semibold rounded border border-wot-border hover:border-gray-500 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> JSON Export
+                </button>
+                <label for="import-json" class="px-3 py-2 bg-wot-input hover:bg-wot-border text-gray-300 text-xs font-semibold rounded border border-wot-border hover:border-gray-500 cursor-pointer transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-upload"></i> JSON Import
+                </label>
+                <input type="file" id="import-json" accept=".json" onchange="importJSON(event)" class="hidden">
+                <button onclick="clearData()" class="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 text-xs font-semibold rounded border border-red-800/40 hover:border-red-600 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Reset Data
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-wot-card border border-wot-border rounded-lg p-5 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-2 h-full bg-wot-gold"></div>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Current Score</p>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span id="kpi-current-score" class="text-3xl font-bold text-white font-heading">0</span>
+                    <span id="kpi-current-day" class="text-xs text-wot-gold font-semibold">(Day 0)</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1" id="kpi-last-growth">Daily growth: +0 pts</p>
+            </div>
+
+            <div class="bg-wot-card border border-wot-border rounded-lg p-5 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-2 h-full bg-wot-accent"></div>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Day 14 Forecast (Expected Value)</p>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span id="kpi-pred-tag14" class="text-3xl font-bold text-wot-gold font-heading">--</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1" id="kpi-pred-diff">vs. Maneuver 4: --</p>
+            </div>
+
+            <div class="bg-wot-card border border-wot-border rounded-lg p-5 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-2 h-full bg-wot-cyan"></div>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Expected Range (Min - Max)</p>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span id="kpi-range-tag14" class="text-xl font-bold text-wot-cyan font-heading">--</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1" id="kpi-confidence-level">Confidence Level: ~95%</p>
+            </div>
+
+            <div class="bg-wot-card border border-wot-border rounded-lg p-5 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-2 h-full bg-purple-500"></div>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Required Daily Pace</p>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span id="kpi-req-pace" class="text-3xl font-bold text-purple-300 font-heading">--</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Points/day remaining until Day 14</p>
+            </div>
+        </div>
+
+        <!-- Input Grid -->
+        <div class="bg-wot-card border border-wot-border rounded-lg p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-wot-border">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-keyboard text-wot-gold"></i> Current Maneuver Daily Scores (Points)
+                    </h2>
+                    <p class="text-xs text-gray-400">Enter cumulative points for completed days. The forecast will update automatically.</p>
+                </div>
+                <span class="text-xs px-2.5 py-1 bg-wot-input text-wot-gold border border-wot-gold/30 rounded font-mono">Autosave: Active</span>
+            </div>
+            
+            <div id="inputs-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-14 gap-2">
+                <!-- Dynamically generated Day 1-14 Inputs -->
+            </div>
+        </div>
+
+        <!-- Main Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Forecast & History Chart -->
+            <div class="lg:col-span-2 bg-wot-card border border-wot-border rounded-lg p-5 shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-wot-gold"></i> Maneuver Progression & Prediction Corridor
+                        </h3>
+                        <p class="text-xs text-gray-400">Historical comparison (M1–M4) + Current event with Min/Max range corridor</p>
+                    </div>
+                </div>
+                <div class="relative flex-grow h-[380px]">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Deviation Chart -->
+            <div class="bg-wot-card border border-wot-border rounded-lg p-5 shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-area text-wot-cyan"></i> Deviation & Deltas
+                        </h3>
+                        <p class="text-xs text-gray-400">Percentage deviation from historical event average</p>
+                    </div>
+                </div>
+                <div class="relative flex-grow h-[380px]">
+                    <canvas id="deviationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Comparison Table -->
+        <div class="bg-wot-card border border-wot-border rounded-lg p-6 shadow-xl overflow-hidden">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-table text-wot-gold"></i> Data Matrix & Forecast Values
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left text-gray-300">
+                    <thead class="text-xs text-gray-400 uppercase bg-wot-input border-b border-wot-border">
+                        <tr>
+                            <th scope="col" class="px-3 py-3">Event</th>
+                            <th scope="col" class="px-2 py-3 text-right">D1</th>
+                            <th scope="col" class="px-2 py-3 text-right">D2</th>
+                            <th scope="col" class="px-2 py-3 text-right">D3</th>
+                            <th scope="col" class="px-2 py-3 text-right">D4</th>
+                            <th scope="col" class="px-2 py-3 text-right">D5</th>
+                            <th scope="col" class="px-2 py-3 text-right">D6</th>
+                            <th scope="col" class="px-2 py-3 text-right">D7</th>
+                            <th scope="col" class="px-2 py-3 text-right">D8</th>
+                            <th scope="col" class="px-2 py-3 text-right">D9</th>
+                            <th scope="col" class="px-2 py-3 text-right">D10</th>
+                            <th scope="col" class="px-2 py-3 text-right">D11</th>
+                            <th scope="col" class="px-2 py-3 text-right">D12</th>
+                            <th scope="col" class="px-2 py-3 text-right">D13</th>
+                            <th scope="col" class="px-2 py-3 text-right text-wot-gold font-bold">D14</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrix-table-body" class="divide-y divide-wot-border">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-wot-card border border-wot-gold text-white px-4 py-3 rounded shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-3 z-50">
+        <i class="fa-solid fa-circle-info text-wot-gold"></i>
+        <span id="toast-msg" class="text-sm">Message</span>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Historical Data
+        const historicalEvents = {
+            "Maneuver 1": [903, 1867, 2888, 3956, 5008, 5938, 6964, 8048, 9149, 10253, 11375, 12556, 13756, 15077],
+            "Maneuver 2": [971, 2025, 3138, 4292, 5431, 6561, 7781, 8953, 10159, 11374, 12552, 13827, 15098, 16611],
+            "Maneuver 3": [977, 2077, 3238, 4405, 5623, 6841, 8112, 9386, 10665, 11928, 13234, 14587, 16003, 17700],
+            "Maneuver 4": [860, 1857, 2841, 3915, 4975, 6047, 7225, 8400, 9597, 10782, 11968, 13266, 14503, 16079]
+        };
+
+        // State for Current Maneuver Days (14 days)
+        let currentData = Array(14).fill(null);
+
+        // Chart Instances
+        let forecastChart = null;
+        let deviationChart = null;
+
+        // On Load Initializer
+        window.onload = function() {
+            loadSavedData();
+            createInputFields();
+            updateDashboard();
+        };
+
+        // Load LocalStorage if available
+        function loadSavedData() {
+            const saved = localStorage.getItem("wot_maneuver_current_data");
             if (saved) {
-                JSON.parse(saved).forEach((val, idx) => { if (val !== null) document.getElementById(`in-${idx}`).value = val; });
-            }
-        }
-        analyze();
-    };
-
-    function exportURL() {
-        const url = new URL(window.location.href.split('?')[0]);
-        for(let i=0; i<14; i++) {
-            let v = document.getElementById(`in-${i}`).value;
-            if(v !== "") url.searchParams.set(`d${i}`, v);
-        }
-        navigator.clipboard.writeText(url.toString()).then(() => alert("URL kopiert!"));
-    }
-
-    function saveData() {
-        let data = Array.from({length: 14}, (_, i) => {
-            let v = document.getElementById(`in-${i}`).value;
-            return v === "" ? null : parseFloat(v);
-        });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        alert("Gespeichert.");
-    }
-
-    function clearData() {
-        if(confirm("Löschen?")) { localStorage.removeItem(STORAGE_KEY); window.location.search = ""; location.reload(); }
-    }
-
-    function analyze() {
-        let inputs = [];
-        let realData = new Array(14).fill(null);
-        let progData = new Array(14).fill(null);
-        let maxData = new Array(14).fill(null);
-        let minData = new Array(14).fill(null);
-
-        for(let i=0; i<14; i++) {
-            let v = parseFloat(document.getElementById(`in-${i}`).value);
-            if(!isNaN(v)) {
-                inputs.push({t: i, total: v});
-                realData[i] = v;
-                progData[i] = v;
-                maxData[i] = v;
-                minData[i] = v;
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length === 14) {
+                        currentData = parsed;
+                    }
+                } catch(e) {
+                    console.error("Failed to load saved data", e);
+                }
             }
         }
 
-        if(inputs.length === 0) return;
-
-        let lastT = inputs[inputs.length - 1].t;
-        let currentTotal = inputs[inputs.length - 1].total;
-
-        let inputDeltas = inputs.map((inp, i) => {
-            let d = (i === 0) ? inp.total : inp.total - inputs[i-1].total;
-            return {t: inp.t, val: d, ratio: d / avgDelta[inp.t]};
-        });
-
-        let avgRatio = inputDeltas.reduce((a, b) => a + b.ratio, 0) / inputDeltas.length;
-        let trend = inputDeltas.length >= 2 ? ((inputDeltas[inputDeltas.length-1].ratio - inputDeltas[0].ratio) / (inputDeltas[inputDeltas.length-1].t - inputDeltas[0].t)) * 0.5 : 0;
-
-        document.getElementById('eff-val').innerText = (avgRatio * 100).toFixed(1) + "%";
-        document.getElementById('trend-val').innerText = trend > 0.02 ? "Steigend" : trend < -0.02 ? "Sinkend" : "Stabil";
-
-        for(let i=lastT + 1; i < 14; i++) {
-            let proj = progData[i-1], pMax = maxData[i-1], pMin = minData[i-1];
-            let ratio = Math.max(0.5, Math.min(2.0, inputDeltas[inputDeltas.length-1].ratio + (trend * (i - lastT))));
-            
-            progData[i] = Math.round(proj + (avgDelta[i] * ratio));
-            maxData[i] = Math.round(pMax + (avgDelta[i] * (ratio * 1.15)));
-            minData[i] = Math.round(pMin + (avgDelta[i] * (ratio * 0.85)));
-            
-            document.getElementById(`out-${i}`).innerText = progData[i];
+        // Save State
+        function saveData() {
+            localStorage.setItem("wot_maneuver_current_data", JSON.stringify(currentData));
         }
 
-        document.getElementById('total-val').innerText = progData[13].toLocaleString('de-DE') + " Pkt";
-        document.getElementById('range-val').innerText = minData[13].toLocaleString('de-DE') + " - " + maxData[13].toLocaleString('de-DE');
+        // Generate Dynamic Inputs
+        function createInputFields() {
+            const container = document.getElementById('inputs-container');
+            container.innerHTML = '';
 
-        chart.data.datasets[1].data = realData;
-        chart.data.datasets[2].data = maxData;
-        chart.data.datasets[3].data = minData;
-        chart.data.datasets[4].data = progData;
-        chart.update('none');
-    }
-</script>
+            for (let i = 0; i < 14; i++) {
+                const dayNum = i + 1;
+                const val = currentData[i] !== null ? currentData[i] : '';
+                
+                const div = document.createElement('div');
+                div.className = "flex flex-col gap-1";
+                div.innerHTML = `
+                    <label class="text-[10px] uppercase font-bold text-gray-400">Day ${dayNum}</label>
+                    <input 
+                        type="number" 
+                        id="input-day-${i}" 
+                        value="${val}" 
+                        placeholder="--"
+                        oninput="onInputChanged(${i}, this.value)"
+                        class="w-full bg-wot-input border border-wot-border focus:border-wot-gold text-white text-xs font-semibold rounded p-2 text-center outline-none transition-colors"
+                    />
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // Input Change Handler
+        function onInputChanged(index, val) {
+            const num = val === '' ? null : parseFloat(val);
+            currentData[index] = isNaN(num) ? null : num;
+            saveData();
+            updateDashboard();
+        }
+
+        // Optimized Prediction Algorithm Core
+        function calculateForecast() {
+            // Determine last entered day index (continuous sequence)
+            let lastIndex = -1;
+            for (let i = 0; i < 14; i++) {
+                if (currentData[i] !== null && !isNaN(currentData[i])) {
+                    lastIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            const forecastMean = [...currentData];
+            const forecastMin = [...currentData];
+            const forecastMax = [...currentData];
+
+            const eventsList = Object.values(historicalEvents);
+
+            // Case A: No data entered yet -> Baseline average based on past events
+            if (lastIndex === -1) {
+                for (let day = 0; day < 14; day++) {
+                    const valuesAtDay = eventsList.map(ev => ev[day]);
+                    const avg = valuesAtDay.reduce((a, b) => a + b, 0) / valuesAtDay.length;
+                    const min = Math.min(...valuesAtDay);
+                    const max = Math.max(...valuesAtDay);
+
+                    forecastMean[day] = Math.round(avg);
+                    forecastMin[day] = Math.round(min);
+                    forecastMax[day] = Math.round(max);
+                }
+                return { lastIndex, forecastMean, forecastMin, forecastMax };
+            }
+
+            // Case B: At least Day 1 is entered
+            const currentVal = currentData[lastIndex];
+
+            // 1. Compute historical multipliers from current day (lastIndex) to target days (targetDay)
+            for (let targetDay = lastIndex + 1; targetDay < 14; targetDay++) {
+                const ratios = eventsList.map(ev => {
+                    const startVal = ev[lastIndex];
+                    const targetVal = ev[targetDay];
+                    return startVal > 0 ? (targetVal / startVal) : 1;
+                });
+
+                // Calculate Average Ratio and Min/Max Ratios
+                const avgRatio = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+                const minRatio = Math.min(...ratios);
+                const maxRatio = Math.max(...ratios);
+
+                // Expected baseline forecast
+                let meanVal = Math.round(currentVal * avgRatio);
+                let minVal = Math.round(currentVal * minRatio);
+                let maxVal = Math.round(currentVal * maxRatio);
+
+                // Ensure logical boundaries (monotonicity: forecast >= current value & min <= mean <= max)
+                const prevMean = forecastMean[targetDay - 1] || currentVal;
+                const prevMin = forecastMin[targetDay - 1] || currentVal;
+                const prevMax = forecastMax[targetDay - 1] || currentVal;
+
+                minVal = Math.max(minVal, prevMin);
+                meanVal = Math.max(meanVal, prevMean, minVal);
+                maxVal = Math.max(maxVal, prevMax, meanVal);
+
+                forecastMean[targetDay] = meanVal;
+                forecastMin[targetDay] = minVal;
+                forecastMax[targetDay] = maxVal;
+            }
+
+            return { lastIndex, forecastMean, forecastMin, forecastMax };
+        }
+
+        // Update Dashboard Analytics & UI
+        function updateDashboard() {
+            const { lastIndex, forecastMean, forecastMin, forecastMax } = calculateForecast();
+
+            // KPI 1: Current Score
+            const kpiScore = document.getElementById('kpi-current-score');
+            const kpiDay = document.getElementById('kpi-current-day');
+            const kpiGrowth = document.getElementById('kpi-last-growth');
+
+            if (lastIndex >= 0) {
+                kpiScore.innerText = currentData[lastIndex].toLocaleString('en-US');
+                kpiDay.innerText = `(Day ${lastIndex + 1})`;
+                
+                if (lastIndex > 0) {
+                    const diff = currentData[lastIndex] - currentData[lastIndex - 1];
+                    kpiGrowth.innerText = `Daily growth: +${diff.toLocaleString('en-US')} pts`;
+                } else {
+                    kpiGrowth.innerText = `Daily growth: Start`;
+                }
+            } else {
+                kpiScore.innerText = "0";
+                kpiDay.innerText = "(No input)";
+                kpiGrowth.innerText = "Daily growth: --";
+            }
+
+            // KPI 2: Day 14 Forecast
+            const kpiPredTag14 = document.getElementById('kpi-pred-tag14');
+            const kpiPredDiff = document.getElementById('kpi-pred-diff');
+            const finalMean = forecastMean[13];
+            const m4Final = historicalEvents["Maneuver 4"][13];
+
+            kpiPredTag14.innerText = finalMean ? finalMean.toLocaleString('en-US') : "--";
+            
+            if (finalMean) {
+                const diffM4 = finalMean - m4Final;
+                const sign = diffM4 >= 0 ? '+' : '';
+                kpiPredDiff.innerText = `vs. M4 (${m4Final.toLocaleString('en-US')}): ${sign}${diffM4.toLocaleString('en-US')}`;
+                kpiPredDiff.className = `text-xs font-semibold mt-1 ${diffM4 >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            }
+
+            // KPI 3: Range Day 14
+            const kpiRange = document.getElementById('kpi-range-tag14');
+            if (forecastMin[13] && forecastMax[13]) {
+                kpiRange.innerText = `${forecastMin[13].toLocaleString('en-US')} - ${forecastMax[13].toLocaleString('en-US')}`;
+            }
+
+            // KPI 4: Required Daily Pace
+            const kpiPace = document.getElementById('kpi-req-pace');
+            const daysLeft = 14 - (lastIndex + 1);
+            if (daysLeft > 0 && lastIndex >= 0) {
+                const pointsNeeded = finalMean - currentData[lastIndex];
+                const avgPace = Math.round(pointsNeeded / daysLeft);
+                kpiPace.innerText = `+${avgPace.toLocaleString('en-US')}`;
+            } else if (lastIndex === 13) {
+                kpiPace.innerText = "Event Completed";
+            } else {
+                const totalAvgPace = Math.round(finalMean / 14);
+                kpiPace.innerText = `~${totalAvgPace.toLocaleString('en-US')}`;
+            }
+
+            // Render Components
+            renderCharts(lastIndex, forecastMean, forecastMin, forecastMax);
+            renderMatrixTable(forecastMean, forecastMin, forecastMax);
+        }
+
+        // Render Charts using Chart.js
+        function renderCharts(lastIndex, forecastMean, forecastMin, forecastMax) {
+            const labels = Array.from({length: 14}, (_, i) => `Day ${i+1}`);
+
+            // Prepare Data for Main Forecast Chart
+            const realCurrentData = labels.map((_, i) => i <= lastIndex ? currentData[i] : null);
+            const predLineData = labels.map((_, i) => i >= lastIndex ? forecastMean[i] : null);
+            const predMaxData = labels.map((_, i) => i >= lastIndex ? forecastMax[i] : null);
+            const predMinData = labels.map((_, i) => i >= lastIndex ? forecastMin[i] : null);
+
+            // Chart 1: Forecast Chart
+            const ctx1 = document.getElementById('forecastChart').getContext('2d');
+            if (forecastChart) forecastChart.destroy();
+
+            forecastChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Current Event (Actual)',
+                            data: realCurrentData,
+                            borderColor: '#f39c12',
+                            backgroundColor: '#f39c12',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            z: 10
+                        },
+                        {
+                            label: 'Forecast (Expected)',
+                            data: predLineData,
+                            borderColor: '#f1c40f',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 3,
+                            fill: false,
+                            z: 9
+                        },
+                        {
+                            label: 'Forecast Max (Range)',
+                            data: predMaxData,
+                            borderColor: 'rgba(0, 210, 211, 0.4)',
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            fill: '+1', // Fill down to Min dataset
+                            backgroundColor: 'rgba(0, 210, 211, 0.12)',
+                            z: 1
+                        },
+                        {
+                            label: 'Forecast Min (Range)',
+                            data: predMinData,
+                            borderColor: 'rgba(0, 210, 211, 0.4)',
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            fill: false,
+                            z: 1
+                        },
+                        {
+                            label: 'Maneuver 1',
+                            data: historicalEvents["Maneuver 1"],
+                            borderColor: '#4a5568',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Maneuver 2',
+                            data: historicalEvents["Maneuver 2"],
+                            borderColor: '#718096',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Maneuver 3',
+                            data: historicalEvents["Maneuver 3"],
+                            borderColor: '#a0aec0',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Maneuver 4',
+                            data: historicalEvents["Maneuver 4"],
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#cbd5e1', font: { size: 11 } }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1b1d24',
+                            titleColor: '#f39c12',
+                            borderColor: '#2a2d37',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#2a2d37' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            grid: { color: '#2a2d37' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Deviation & Delta Chart
+            const avgHistorical = labels.map((_, day) => {
+                const vals = Object.values(historicalEvents).map(h => h[day]);
+                return vals.reduce((a, b) => a + b, 0) / vals.length;
+            });
+
+            const currentCombined = labels.map((_, i) => i <= lastIndex ? currentData[i] : forecastMean[i]);
+            const percentageDev = currentCombined.map((val, i) => {
+                if (val === null) return null;
+                const avg = avgHistorical[i];
+                return parseFloat((((val - avg) / avg) * 100).toFixed(2));
+            });
+
+            const ctx2 = document.getElementById('deviationChart').getContext('2d');
+            if (deviationChart) deviationChart.destroy();
+
+            deviationChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Deviation vs. Hist. Avg (%)',
+                        data: percentageDev,
+                        backgroundColor: percentageDev.map(v => v >= 0 ? 'rgba(46, 204, 113, 0.6)' : 'rgba(231, 76, 60, 0.6)'),
+                        borderColor: percentageDev.map(v => v >= 0 ? '#2ecc71' : '#e74c3c'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1' } },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `Deviation: ${context.parsed.y > 0 ? '+' : ''}${context.parsed.y}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: '#2a2d37' }, ticks: { color: '#94a3b8' } },
+                        y: { 
+                            grid: { color: '#2a2d37' }, 
+                            ticks: { 
+                                color: '#94a3b8',
+                                callback: value => value + '%' 
+                            } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Matrix Table
+        function renderMatrixTable(forecastMean, forecastMin, forecastMax) {
+            const tbody = document.getElementById('matrix-table-body');
+            tbody.innerHTML = '';
+
+            // 1. Add historical rows
+            Object.entries(historicalEvents).forEach(([name, values]) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-wot-input/50 transition-colors";
+                let tds = `<td class="px-3 py-2.5 font-semibold text-gray-300">${name}</td>`;
+                values.forEach((v, idx) => {
+                    const isLast = idx === 13;
+                    tds += `<td class="px-2 py-2.5 text-right font-mono ${isLast ? 'text-wot-gold font-bold' : ''}">${v.toLocaleString('en-US')}</td>`;
+                });
+                tr.innerHTML = tds;
+                tbody.appendChild(tr);
+            });
+
+            // 2. Add Current Real / Forecast Row
+            let lastIndex = -1;
+            for (let i = 0; i < 14; i++) {
+                if (currentData[i] !== null && !isNaN(currentData[i])) lastIndex = i;
+            }
+
+            const trCurrent = document.createElement('tr');
+            trCurrent.className = "bg-wot-gold/10 font-bold border-t-2 border-wot-gold/40";
+            let tdsCurrent = `<td class="px-3 py-2.5 text-wot-gold flex items-center gap-1"><i class="fa-solid fa-play text-[10px]"></i> Current / Forecast</td>`;
+            
+            for (let i = 0; i < 14; i++) {
+                const isReal = i <= lastIndex;
+                const val = isReal ? currentData[i] : forecastMean[i];
+                const displayVal = val !== null ? val.toLocaleString('en-US') : '--';
+                const styleClass = isReal ? 'text-white' : 'text-wot-goldlight italic';
+                
+                tdsCurrent += `<td class="px-2 py-2.5 text-right font-mono ${styleClass}">${displayVal}</td>`;
+            }
+            trCurrent.innerHTML = tdsCurrent;
+            tbody.appendChild(trCurrent);
+
+            // 3. Add Range Row (Min - Max)
+            const trRange = document.createElement('tr');
+            trRange.className = "text-gray-400 text-[11px] bg-wot-input/30";
+            let tdsRange = `<td class="px-3 py-2 text-wot-cyan font-semibold">Forecast Range (Min - Max)</td>`;
+            for (let i = 0; i < 14; i++) {
+                if (i <= lastIndex) {
+                    tdsRange += `<td class="px-2 py-2 text-right text-gray-600 font-mono">--</td>`;
+                } else {
+                    const min = forecastMin[i] ? forecastMin[i].toLocaleString('en-US') : '--';
+                    const max = forecastMax[i] ? forecastMax[i].toLocaleString('en-US') : '--';
+                    tdsRange += `<td class="px-2 py-2 text-right font-mono text-wot-cyan/80 text-[10px]">${min}<br>${max}</td>`;
+                }
+            }
+            trRange.innerHTML = tdsRange;
+            tbody.appendChild(trRange);
+        }
+
+        // Clear Data Function
+        function clearData() {
+            if (confirm("Are you sure you want to reset all entered daily values?")) {
+                currentData = Array(14).fill(null);
+                saveData();
+                createInputFields();
+                updateDashboard();
+                showToast("Data successfully reset.");
+            }
+        }
+
+        // Export Data as JSON
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `wot_maneuver_data_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("JSON data exported.");
+        }
+
+        // Import Data from JSON
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported) && imported.length === 14) {
+                        currentData = imported;
+                        saveData();
+                        createInputFields();
+                        updateDashboard();
+                        showToast("Data successfully imported!");
+                    } else {
+                        alert("Invalid file format. An array with 14 elements is expected.");
+                    }
+                } catch(err) {
+                    alert("Error reading JSON file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Self-Contained HTML Export (Embeds state directly in HTML file code)
+        function exportHTML() {
+            // Clone document HTML
+            let htmlContent = document.documentElement.outerHTML;
+            
+            // Replace initial state variable inside script tag of exported HTML
+            const scriptStatePattern = /let currentData = Array\(14\)\.fill\(null\);|let currentData = \[.*?\];/;
+            const newStateString = `let currentData = ${JSON.stringify(currentData)};`;
+            
+            htmlContent = htmlContent.replace(scriptStatePattern, newStateString);
+
+            // Create Blob and Download Link
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `WoT_Maneuver_Dashboard_${new Date().toISOString().slice(0,10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Complete standalone HTML webpage with data exported!");
+        }
+
+        // Helper Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            toastMsg.innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
