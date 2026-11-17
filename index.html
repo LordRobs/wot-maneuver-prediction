@@ -3,74 +3,115 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Maneuver Forecast</title>
+<title>WoT Maneuver Forecast Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#dfe3d8;--panel:#eef0e8;--ink:#1d2a22;--mute:#5d6a60;--line:#b9c0b0;--olive:#4f6a2a;--amber:#c98a1b;--band:rgba(201,138,27,.22);--red:#9a3b24;--hist:#9aa595}
+:root{--bg:#0d0e12;--panel:#161820;--panel2:#1c1f28;--line:#2a2d38;--ink:#eceef3;--mute:#8b90a0;--act:#f59e0b;--fc:#facc15;--cy:#22d3ee;--pu:#a78bfa;--or:#f97316;--red:#ef4444;--band1:rgba(34,211,238,.12);--band2:rgba(34,211,238,.28)}
 *{box-sizing:border-box}
-html{color-scheme:light}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Barlow","Segoe UI",system-ui,sans-serif}
-h1,h2,.num{font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif;font-weight:600;letter-spacing:.01em}
-header{padding:28px 24px 8px;max-width:1180px;margin:0 auto}
-h1{font-size:2.4rem;margin:0;line-height:1.1}
-header p{margin:4px 0 0;color:var(--mute);max-width:62ch}
-main{max-width:1180px;margin:0 auto;padding:16px 24px 48px;display:grid;grid-template-columns:300px 1fr;gap:24px}
-@media(max-width:860px){main{grid-template-columns:1fr}}
-section{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px}
-h2{font-size:1.4rem;margin:0 0 10px}
-#inputs{display:grid;gap:6px}
-.row{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:8px}
-.row label{color:var(--mute)}
-input{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--line);background:#fff;border-radius:3px;color:var(--ink)}
-input:focus-visible,button:focus-visible{outline:3px solid var(--amber);outline-offset:1px}
-input.bad{border-color:var(--red);background:#f6e3dd}
-.btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-button{font:inherit;font-weight:600;padding:8px 14px;border-radius:3px;border:1px solid var(--olive);background:var(--olive);color:#fff;cursor:pointer}
-button.sec{background:transparent;color:var(--red);border-color:var(--red)}
-.hint{color:var(--mute);font-size:.88rem;margin:10px 0 0}
-#result{display:flex;gap:28px;align-items:flex-end;flex-wrap:wrap}
-.big{font-size:4.2rem;line-height:1;color:var(--olive)}
-.range{font-size:1.6rem;color:var(--amber)}
-.small{color:var(--mute);font-size:.9rem}
-.stack{display:grid;gap:24px}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Inter","Segoe UI",system-ui,sans-serif}
+h1,h2,.hd,.kv{font-family:"Rajdhani","Arial Narrow",Impact,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 24px 48px;display:grid;gap:20px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:40px;height:40px;border-radius:8px;background:var(--act);display:grid;place-items:center}
+h1{margin:0;font-size:1.55rem;font-weight:700;letter-spacing:.03em;line-height:1.1;text-transform:uppercase}
+h1 span{color:var(--act)}
+.sub{color:var(--mute);font-size:.8rem}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+button{font:600 .8rem "Inter",sans-serif;padding:8px 14px;border-radius:6px;border:1px solid var(--act);background:var(--act);color:#1a1200;cursor:pointer}
+button.red{background:rgba(239,68,68,.12);color:#fca5a5;border-color:rgba(239,68,68,.5)}
+button.ghost{background:rgba(245,158,11,.12);color:var(--act);border-color:rgba(245,158,11,.4)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--cy);outline-offset:1px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.kpis{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;border-right:5px solid var(--c,var(--line))}
+.card .lb{font:600 .72rem "Inter";letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.kv{font-size:2.1rem;font-weight:700;line-height:1.15;margin:6px 0 2px}
+.kv small{font-size:.85rem;color:var(--act);font-weight:600}
+.card .ft{color:var(--mute);font-size:.78rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;min-width:0}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+h2{margin:0;font-size:1.05rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;display:flex;gap:8px;align-items:center}
+h2::before{content:"";width:10px;height:10px;border-radius:2px;background:var(--act)}
+.pd{color:var(--mute);font-size:.8rem;margin:0 0 12px}
+.link{display:flex;gap:8px;align-items:center}
+.link input{width:260px;max-width:100%;font-size:.75rem;color:var(--mute)}
+#inputs{display:grid;gap:14px;border-top:1px solid var(--line);padding-top:14px}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:12px 14px}
+@media(max-width:700px){.wk{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}}
+.cell label{display:block;font:600 .66rem "Inter";letter-spacing:.06em;color:var(--mute);margin-bottom:4px;text-transform:uppercase}
+input{width:100%;font:600 .85rem "Inter",sans-serif;padding:8px 10px;border:1px solid var(--line);background:var(--panel2);border-radius:6px;color:var(--ink);text-align:right}
+input.bad{border-color:var(--red);background:#3a1a1a}
+.two{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
+@media(max-width:960px){.two{grid-template-columns:1fr}}
 svg{width:100%;height:auto;display:block}
-svg text{font:12px "Barlow",sans-serif;fill:var(--mute)}
-.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.88rem;color:var(--mute);margin-top:6px}
-.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px}
+svg text{font:11px "Inter",sans-serif;fill:var(--mute)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--mute);margin-top:8px}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px}
+.tw{overflow-x:auto;border-radius:8px;border:1px solid var(--line)}
+table{width:100%;min-width:980px;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.78rem}
+th,td{padding:9px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;padding-left:14px;font-weight:600}
+thead th{background:var(--panel2);color:var(--mute);font:600 .72rem "Inter";letter-spacing:.05em}
+th.cur,td.cur{background:rgba(245,158,11,.08)}
+tr.act td{font-weight:600}
+tr.proj td{font-style:italic;color:var(--fc)}
+tr.fin td{color:var(--act);font-weight:600}
+tr.rng td{color:var(--cy);font-size:.7rem;line-height:1.3}
+tr:last-child td{border-bottom:0}
+.dim{color:#4b5060!important}
+.hit{fill:transparent;cursor:pointer}
+.hit:hover{stroke:#fff;stroke-width:1.5}
+#tip{position:fixed;z-index:10;pointer-events:none;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:.78rem;line-height:1.45;box-shadow:0 6px 20px rgba(0,0,0,.5);white-space:nowrap}
+#tip b{display:block;color:var(--act);margin-bottom:2px}
 </style>
 </head>
 <body>
+<div class="wrap">
 <header>
-<h1>Maneuver Forecast</h1>
-<p>Enter the cumulative daily values of the current maneuver. The forecast compares your progress with the day-by-day share of the final score from the last four events.</p>
+<div class="brand">
+<div class="logo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1a1200" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M12 8v6M9 11h6"/></svg></div>
+<div><h1>WoT Maneuver <span>Forecast Tool</span></h1><div class="sub">Analytical prediction &amp; trend monitoring for clan events</div></div>
+</div>
+<div class="hbtns"><button id="export">Copy Share Link</button><button id="clear" class="red">Reset Data</button></div>
 </header>
-<main>
-<section>
-<h2>Daily values</h2>
+
+<div class="kpis" id="kpis"></div>
+
+<section class="panel">
+<div class="ph"><h2>Current maneuver daily scores (points)</h2>
+<div class="link"><input id="linkbox" readonly aria-label="Share link"><button id="copy2" class="ghost">Copy URL</button></div></div>
+<p class="pd">Enter cumulative points for completed days. The forecast updates automatically.</p>
 <div id="inputs"></div>
-<div class="btns">
-<button id="export">Copy link</button>
-<button id="clear" class="sec">Clear data</button>
-</div>
-<input id="linkbox" type="text" readonly hidden aria-label="Link with your values" style="margin-top:10px">
-<p class="hint">Copies a link to this page that includes your entered values. Open it to restore them.</p>
 </section>
-<div class="stack">
-<section>
-<h2>Final score forecast (Day 14)</h2>
-<div id="result"></div>
-</section>
-<section>
-<h2>Forecast and range</h2>
+
+<div class="two">
+<section class="panel">
+<div class="ph"><h2>Maneuver progression &amp; prediction corridor</h2></div>
+<p class="pd">Actual progress with the expected path and its range up to Day 14</p>
 <div id="c1"></div>
-<div class="legend"><span><i style="background:var(--olive)"></i>Entered</span><span><i style="background:var(--amber)"></i>Expected</span><span><i style="background:var(--band);height:10px"></i>Range</span><span><i style="background:var(--hist)"></i>Past events</span></div>
+<div class="legend"><span><i style="background:var(--act)"></i>Actual</span><span><i style="background:var(--fc)"></i>Forecast (expected)</span><span><i style="background:var(--band2);height:10px"></i>Likely range (&plusmn;1 SD)</span><span><i style="background:var(--band1);height:10px;outline:1px dashed var(--cy)"></i>Full range (min&ndash;max)</span></div>
 </section>
-<section>
-<h2>Forecast development</h2>
+<section class="panel">
+<div class="ph"><h2>Forecast development</h2></div>
+<p class="pd">Day 14 forecast based on each entered day</p>
 <div id="c2"></div>
-<div class="legend"><span><i style="background:var(--amber)"></i>Forecast by day</span><span><i style="background:var(--band);height:10px"></i>Range</span></div>
+<div class="legend"><span><i style="background:var(--fc)"></i>Day 14 forecast</span><span><i style="background:var(--band2);height:10px"></i>&plusmn;1 SD</span><span><i style="background:var(--band1);height:10px;outline:1px dashed var(--cy)"></i>Min&ndash;max</span></div>
 </section>
 </div>
-</main>
+
+<section class="panel">
+<div class="ph"><h2>Data matrix &amp; forecast values</h2></div>
+<p class="pd">Actual values vs. projections per day</p>
+<div id="tbl" style="display:grid;gap:14px"></div>
+</section>
+</div>
+
+<div id="tip" hidden></div>
 <script>
 const HIST=[
 [903,1867,2888,3956,5008,5938,6964,8048,9149,10253,11375,12556,13756,15077],
@@ -81,92 +122,141 @@ const N=14, fin=HIST.map(h=>h[N-1]);
 const share=HIST.map((h,e)=>h.map(v=>v/fin[e]));
 const meanShare=Array.from({length:N},(_,i)=>share.reduce((a,s)=>a+s[i],0)/HIST.length);
 const fmt=n=>Math.round(n).toLocaleString('en-US');
+const $=id=>document.getElementById(id);
 let values=Array(N).fill(null);
 try{const m=location.hash.match(/^#v=([\d,]*)$/);if(m)m[1].split(',').forEach((v,i)=>{if(i<N&&v!=='')values[i]=Number(v)})}catch(e){}
 try{if(!values.some(v=>v!=null)){const l=JSON.parse(localStorage.getItem('maneuver')||'null');if(l)l.forEach((v,i)=>{if(i<N)values[i]=v})}}catch(e){}
 
-function predict(i,v){const p=HIST.map((h,e)=>v/share[e][i]);return{mean:v/meanShare[i],lo:Math.min(...p),hi:Math.max(...p)}}
-
-const inputs=document.getElementById('inputs');
+function predict(i,v){const p=HIST.map((h,e)=>v/share[e][i]);const m=p.reduce((a,b)=>a+b,0)/p.length;const sd=Math.sqrt(p.reduce((a,b)=>a+(b-m)**2,0)/p.length);return{mean:v/meanShare[i],lo:Math.min(...p),hi:Math.max(...p),sd}}
+const inputs=$('inputs');
+const weeks=[0,1].map(()=>{const g=document.createElement('div');g.className='wk';inputs.appendChild(g);return g});
 for(let i=0;i<N;i++){
- const r=document.createElement('div');r.className='row';
- r.innerHTML=`<label for="d${i}">Day ${i+1}</label><input id="d${i}" type="number" inputmode="numeric" min="0" step="1">`;
- inputs.appendChild(r);
- const inp=r.querySelector('input');
- inp.value=values[i]??'';
+ const c=document.createElement('div');c.className='cell';
+ c.innerHTML=`<label for="d${i}">Day ${i+1}</label><input id="d${i}" type="number" inputmode="numeric" min="0" step="1" placeholder="--">`;
+ weeks[i<7?0:1].appendChild(c);
+ const inp=c.querySelector('input');inp.value=values[i]??'';
  inp.addEventListener('input',()=>{values[i]=inp.value===''?null:Number(inp.value);update()});
 }
 
-function svgChart({ymin,ymax,lines=[],bands=[],dots=[],hlines=[]}){
- const W=720,H=330,L=56,R=16,T=12,B=30,pw=W-L-R,ph=H-T-B;
- const x=d=>L+(d-1)/(N-1)*pw, y=v=>T+ph-(v-ymin)/(ymax-ymin)*ph;
+function dot(cx,cy,r,fill,tip){return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" pointer-events="none"/><circle class="hit" cx="${cx}" cy="${cy}" r="${r+6}" data-tip="${tip}"/>`}
+const sdRange=p=>`${fmt(Math.max(p.lo,p.mean-p.sd))} &ndash; ${fmt(Math.min(p.hi,p.mean+p.sd))}`;
+const tipEl=$('tip');
+function showTip(e){
+ const t=e.target.closest&&e.target.closest('[data-tip]');
+ if(!t){tipEl.hidden=true;return}
+ const [h,...r]=t.dataset.tip.split('|');
+ tipEl.innerHTML=`<b>${h}</b>`+r.map(l=>`<div>${l}</div>`).join('');
+ tipEl.hidden=false;
+ const pad=14,w=tipEl.offsetWidth,hh=tipEl.offsetHeight;
+ let X=e.clientX+pad,Y=e.clientY+pad;
+ if(X+w>innerWidth-8)X=e.clientX-w-pad;
+ if(Y+hh>innerHeight-8)Y=e.clientY-hh-pad;
+ tipEl.style.left=Math.max(8,X)+'px';tipEl.style.top=Math.max(8,Y)+'px';
+}
+['mousemove','click'].forEach(ev=>document.addEventListener(ev,showTip));
+function niceStep(r){const m=Math.pow(10,Math.floor(Math.log10(r))),f=r/m;return(f<1.5?1:f<3.5?2:f<7.5?5:10)*m}
+function chart(ymin,ymax,draw,W=720){
+ const H=340,L=54,R=64,T=14,B=30,pw=W-L-R,ph=H-T-B;
+ const x=d=>L+(d-1)/(N-1)*pw,y=v=>T+ph-(v-ymin)/(ymax-ymin)*ph;
  let s=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
  const step=niceStep((ymax-ymin)/5);
- for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#c9cfc0"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
- for(let d=1;d<=N;d++)s+=`<text x="${x(d)}" y="${H-10}" text-anchor="middle">${d}</text>`;
- hlines.forEach(h=>s+=`<line x1="${L}" x2="${W-R}" y1="${y(h)}" y2="${y(h)}" stroke="var(--hist)" stroke-dasharray="2 4"/>`);
- bands.forEach(b=>{if(b.pts.length<1)return;const up=b.pts.map(p=>`${x(p.d)},${y(p.hi)}`);const dn=b.pts.slice().reverse().map(p=>`${x(p.d)},${y(p.lo)}`);s+=`<polygon points="${up.concat(dn).join(' ')}" fill="var(--band)"/>`});
- lines.forEach(l=>{if(l.pts.length<2)return;s+=`<polyline points="${l.pts.map(p=>`${x(p.d)},${y(p.v)}`).join(' ')}" fill="none" stroke="${l.color}" stroke-width="${l.w||2}" ${l.dash?'stroke-dasharray="6 5"':''} stroke-linejoin="round"/>`});
- dots.forEach(p=>s+=`<circle cx="${x(p.d)}" cy="${y(p.v)}" r="4" fill="${p.color}"/>`);
- return s+'</svg>';
+ for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#262a35"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
+ for(let d=1;d<=N;d++)s+=`<text x="${x(d)}" y="${H-10}" text-anchor="middle">${W<600&&d%2===0?'':'Day '.slice(0,W<600?0:4)+d}</text>`;
+ return s+draw(x,y)+'</svg>';
 }
-function niceStep(r){const m=Math.pow(10,Math.floor(Math.log10(r))),f=r/m;return(f<1.5?1:f<3.5?2:f<7.5?5:10)*m}
+const line=(pts,k,x,y,attr)=>pts.length>1?`<polyline points="${pts.map(p=>`${x(p.d)},${y(p[k])}`).join(' ')}" fill="none" ${attr} stroke-linejoin="round"/>`:'';
+function fan(pts,x,y,whisk){
+ if(!pts.length)return'';
+ const band=(f,g,fill)=>pts.length>1?`<polygon points="${pts.map(p=>`${x(p.d)},${y(g(p))}`).concat(pts.slice().reverse().map(p=>`${x(p.d)},${y(f(p))}`)).join(' ')}" fill="${fill}"/>`:'';
+ let s=band(p=>p.lo,p=>p.hi,'var(--band1)')+band(p=>Math.max(p.lo,p.mean-p.sd),p=>Math.min(p.hi,p.mean+p.sd),'var(--band2)');
+ const ed='stroke="var(--cy)" stroke-width="1" stroke-dasharray="3 4" opacity=".75"';
+ s+=line(pts,'lo',x,y,ed)+line(pts,'hi',x,y,ed);
+ if(whisk)pts.forEach(p=>{const X=x(p.d),a=y(Math.min(p.hi,p.mean+p.sd)),b=y(Math.max(p.lo,p.mean-p.sd));
+  s+=`<line x1="${X}" x2="${X}" y1="${y(p.hi)}" y2="${y(p.lo)}" stroke="var(--cy)" opacity=".6"/><line x1="${X-4}" x2="${X+4}" y1="${y(p.hi)}" y2="${y(p.hi)}" stroke="var(--cy)"/><line x1="${X-4}" x2="${X+4}" y1="${y(p.lo)}" y2="${y(p.lo)}" stroke="var(--cy)"/><rect x="${X-5}" y="${a}" width="10" height="${Math.max(b-a,1)}" fill="var(--cy)" opacity=".4"/>`});
+ return s;
+}
+function endLabels(p,x,y){
+ const X=x(p.d)+10;let a=y(p.hi)+4,b=y(p.mean)+4,c=y(p.lo)+4;b=Math.max(b,a+14);c=Math.max(c,b+14);
+ return `<text x="${X}" y="${a}" style="fill:var(--cy)">${fmt(p.hi)}</text><text x="${X}" y="${b}" style="fill:var(--fc);font-weight:700;font-size:12px">${fmt(p.mean)}</text><text x="${X}" y="${c}" style="fill:var(--cy)">${fmt(p.lo)}</text>`;
+}
+function kpi(lb,val,ft,c){return `<div class="card" style="--c:${c}"><div class="lb">${lb}</div><div class="kv">${val}</div><div class="ft">${ft}</div></div>`}
 
 function update(){
  try{localStorage.setItem('maneuver',JSON.stringify(values))}catch(e){}
+ const any=values.some(v=>v!=null);
+ const url=location.href.split('#')[0]+(any?'#v='+values.map(v=>v??'').join(','):'');
+ $('linkbox').value=url;
+ try{history.replaceState(null,'',url)}catch(e){}
  inputs.querySelectorAll('input').forEach((inp,i)=>{
   const prev=values.slice(0,i).reverse().find(v=>v!=null);
   inp.classList.toggle('bad',values[i]!=null&&prev!=null&&values[i]<=prev);
  });
  const entered=values.map((v,i)=>v!=null?{i,v}:null).filter(Boolean);
- const res=document.getElementById('result');
- const histLines=HIST.map(h=>({pts:h.map((v,i)=>({d:i+1,v})),color:'var(--hist)',w:1.2}));
- const top=Math.ceil(Math.max(...fin)*1.12/1000)*1000;
  if(!entered.length){
-  res.innerHTML='<div class="small">Enter at least one daily value to see a forecast.</div>';
-  document.getElementById('c1').innerHTML=svgChart({ymin:0,ymax:top,lines:histLines});
-  document.getElementById('c2').innerHTML=svgChart({ymin:12000,ymax:20000});
-  return;
+  $('kpis').innerHTML=kpi('Current score','&ndash;','Enter a daily value','var(--act)')+kpi('Day 14 forecast (expected value)','&ndash;','&nbsp;','var(--or)')+kpi('Expected range (min &ndash; max)','&ndash;','&nbsp;','var(--cy)')+kpi('Required daily pace','&ndash;','&nbsp;','var(--pu)');
+  $('c1').innerHTML=chart(0,20000,()=>'');$('c2').innerHTML=chart(12000,20000,()=>'',480);
+  $('tbl').innerHTML=tableHtml(null,[],[]);return;
  }
- const last=entered[entered.length-1];
+ const last=entered[entered.length-1],prev=entered[entered.length-2];
  const P=predict(last.i,last.v);
- res.innerHTML=`<div><div class="small">Expected after day ${last.i+1}</div><div class="num big">${fmt(P.mean)}</div></div>
- <div><div class="small">Range</div><div class="num range">${fmt(P.lo)} – ${fmt(P.hi)}</div></div>
- <div class="small">Basis: ${HIST.length} events, value ÷ historical share of the final score.<br>${last.i<3?'Early in the event the forecast is still uncertain.':'The later it gets, the narrower the range.'}</div>`;
- // Chart 1: Projektion ab letztem Wert
+ const growth=prev?(last.v-prev.v)/(last.i-prev.i):last.v;
+ const left=N-1-last.i, pace=left>0?(P.mean-last.v)/left:null;
+ const sdLo=Math.max(P.lo,P.mean-P.sd),sdHi=Math.min(P.hi,P.mean+P.sd);
+ $('kpis').innerHTML=
+  kpi('Current score',`${fmt(last.v)} <small>(Day ${last.i+1})</small>`,`Daily growth: +${fmt(growth)} pts`,'var(--act)')+
+  kpi('Day 14 forecast (expected value)',fmt(P.mean),`Likely &plusmn;1 SD: &plusmn;${fmt(P.sd)}`,'var(--or)')+
+  kpi('Expected range (min &ndash; max)',`<span style="color:var(--cy)">${fmt(P.lo)} &ndash; ${fmt(P.hi)}</span>`,`Likely (&plusmn;1 SD): ${fmt(sdLo)} &ndash; ${fmt(sdHi)}`,'var(--cy)')+
+  kpi('Required daily pace',pace!=null?`<span style="color:var(--pu)">+${fmt(pace)}</span>`:'&ndash;',pace!=null?`Points/day remaining until Day 14`:'Event complete','var(--pu)');
  const sL=meanShare[last.i];
- const proj=f=>{const pts=[];for(let d=last.i;d<N;d++){pts.push({d:d+1,v:last.v+(f-last.v)*(meanShare[d]-sL)/(1-sL||1)})}return pts};
- const mid=proj(P.mean),lo=proj(P.lo),hi=proj(P.hi);
- const band=[{pts:mid.map((p,k)=>({d:p.d,lo:lo[k].v,hi:hi[k].v}))}];
- const c1=svgChart({ymin:0,ymax:Math.max(top,Math.ceil(P.hi*1.05/1000)*1000),lines:[...histLines,
-  {pts:entered.map(e=>({d:e.i+1,v:e.v})),color:'var(--olive)',w:3},
-  {pts:mid,color:'var(--amber)',w:2.5,dash:true}],bands:band,dots:entered.map(e=>({d:e.i+1,v:e.v,color:'var(--olive)'}))});
- document.getElementById('c1').innerHTML=c1;
- // Chart 2: Prognose-Entwicklung
+ const proj=f=>meanShare.slice(last.i).map((m,k)=>({d:last.i+1+k,v:last.v+(f-last.v)*(m-sL)/(1-sL||1)}));
+ const mid=proj(P.mean),lo=proj(P.lo),hi=proj(P.hi),a1=proj(P.mean-P.sd),a2=proj(P.mean+P.sd);
+ const fanPts=mid.map((p,k)=>({d:p.d,mean:p.v,lo:lo[k].v,hi:hi[k].v,sd:(a2[k].v-a1[k].v)/2}));
+ const act=entered.map(e=>({d:e.i+1,v:e.v}));
+ $('c1').innerHTML=chart(0,Math.max(Math.ceil(P.hi*1.06/1000)*1000,Math.ceil(last.v*1.06/1000)*1000),(x,y)=>
+  `<line x1="${x(last.i+1)}" x2="${x(last.i+1)}" y1="14" y2="310" stroke="var(--mute)" stroke-dasharray="2 4" opacity=".5"/>`+
+  fan(fanPts,x,y)+line(fanPts,'mean',x,y,'stroke="var(--fc)" stroke-width="2.5" stroke-dasharray="6 5"')+
+  line(act,'v',x,y,'stroke="var(--act)" stroke-width="3"')+
+  fanPts.slice(1).map(p=>dot(x(p.d),y(p.mean),3,'var(--fc)',`Day ${p.d} (projected)|Expected: ${fmt(p.mean)}|Min &ndash; max: ${fmt(p.lo)} &ndash; ${fmt(p.hi)}|&plusmn;1 SD: ${sdRange(p)}`)).join('')+
+  act.map(p=>dot(x(p.d),y(p.v),4,'var(--act)',`Day ${p.d}|Actual: ${fmt(p.v)}`)).join('')+
+  endLabels({d:N,mean:P.mean,lo:P.lo,hi:P.hi},x,y));
  const preds=entered.map(e=>({d:e.i+1,...predict(e.i,e.v)}));
- const allv=[...preds.map(p=>p.lo),...preds.map(p=>p.hi)];
- const y0=Math.floor(Math.min(...allv)*0.97/500)*500,y1=Math.ceil(Math.max(...allv)*1.03/500)*500;
- document.getElementById('c2').innerHTML=svgChart({ymin:y0,ymax:y1,
-  bands:[{pts:preds.map(p=>({d:p.d,lo:p.lo,hi:p.hi}))}],
-  lines:[{pts:preds.map(p=>({d:p.d,v:p.mean})),color:'var(--amber)',w:2.5}],
-  dots:preds.map(p=>({d:p.d,v:p.mean,color:'var(--amber)'}))});
+ const allv=preds.flatMap(p=>[p.lo,p.hi]);
+ let y0=Math.floor(Math.min(...allv)*0.97/500)*500,y1=Math.ceil(Math.max(...allv)*1.03/500)*500;
+ if(y1-y0<1000)y1=y0+1000;
+ $('c2').innerHTML=chart(y0,y1,(x,y)=>fan(preds,x,y,true)+line(preds,'mean',x,y,'stroke="var(--fc)" stroke-width="2.5"')+
+  preds.map(p=>dot(x(p.d),y(p.mean),4,'var(--fc)',`Forecast after day ${p.d}|Day 14 expected: ${fmt(p.mean)}|Min &ndash; max: ${fmt(p.lo)} &ndash; ${fmt(p.hi)}|&plusmn;1 SD: ${sdRange(p)}|Actual that day: ${fmt(values[p.d-1])}`)).join('')+endLabels(preds[preds.length-1],x,y),480);
+ $('tbl').innerHTML=tableHtml(last,fanPts,preds);
+}
+function tableHtml(last,fanPts,preds){
+ const dim='<span class="dim">--</span>';
+ const fp=d=>last&&d>last.i+1?fanPts.find(p=>p.d===d):null,pr=d=>preds.find(p=>p.d===d);
+ const rg=p=>p?`${fmt(p.lo)}<br>${fmt(p.hi)}`:dim;
+ const week=(w,from,to)=>{
+  const days=Array.from({length:to-from+1},(_,k)=>from+k);
+  const c=d=>last&&last.i+1===d?'cur':'';
+  const row=(cls,name,f)=>`<tr class="${cls}"><td>${name}</td>${days.map(d=>`<td class="${c(d)}">${f(d)}</td>`).join('')}</tr>`;
+  return `<div class="tw"><table><thead><tr><th>${w}</th>${days.map(d=>`<th class="${c(d)}">D${d}</th>`).join('')}</tr></thead><tbody>`+
+   row('act','Actual',d=>values[d-1]!=null?fmt(values[d-1]):dim)+
+   row('proj','Projected',d=>fp(d)?fmt(fp(d).mean):dim)+
+   row('rng','Projected range (min / max)',d=>rg(fp(d)))+
+   row('fin','Final score forecast',d=>pr(d)?fmt(pr(d).mean):dim)+
+   row('rng','Forecast range (min / max)',d=>rg(pr(d)))+'</tbody></table></div>';
+ };
+ return week('Metric',1,N);
 }
 
-document.getElementById('clear').onclick=()=>{
+function flash(btns,txt,orig){btns.forEach((b,i)=>{b.textContent=txt;setTimeout(()=>b.textContent=orig[i],2200)})}
+async function copyLink(){
+ const box=$('linkbox'),b=[$('export'),$('copy2')],o=['Copy Share Link','Copy URL'];
+ try{await navigator.clipboard.writeText(box.value);flash(b,'Copied',o)}catch(e){box.select();flash(b,'Copy from field',o)}
+}
+$('export').onclick=copyLink;$('copy2').onclick=copyLink;
+$('clear').onclick=()=>{
  if(!confirm('Delete all entered values?'))return;
  values=Array(N).fill(null);
  inputs.querySelectorAll('input').forEach(i=>i.value='');
  try{localStorage.removeItem('maneuver')}catch(e){}
- try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
- document.getElementById('linkbox').hidden=true;
  update();
-};
-document.getElementById('export').onclick=async()=>{
- const btn=document.getElementById('export'),box=document.getElementById('linkbox');
- const url=location.href.split('#')[0]+'#v='+values.map(v=>v??'').join(',');
- box.value=url;box.hidden=false;
- try{await navigator.clipboard.writeText(url);btn.textContent='Link copied'}catch(e){box.select();btn.textContent='Copy the link below'}
- setTimeout(()=>btn.textContent='Copy link',2500);
 };
 update();
 </script>
